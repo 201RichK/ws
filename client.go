@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"net/http"
@@ -33,40 +33,40 @@ var (
 )
 
 //Client is a middleman between the websocket connection and the hub.
-type Client struct {
-	Hub *hub.Hub
+type client struct {
+	hub *hub
 
 	//websocket connection
-	Conn *websocket.Conn
+	conn *websocket.Conn
 
 	//Buffered channel of outbound meesages.
-	Send chan []byte
+	send chan []byte
 }
 
 //readPump pumps message from the websocket conneection to the hub.
-func (c *Client) readPump() {
+func (c *client) readPump() {
 
 }
 
 //writePump pumps message from the hub to the websocket connection
-func (c *Client) writePump() {
+func (c *client) writePump() {
 
 }
 
 //ServeWs handle websockets request
-func ServeWs(h *hub.Hub, w http.ResponseWriter, r *http.Request) {
+func serveWs(h *hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logrus.Error("serveWs upgrade err :: ", err)
 		return
 	}
 
-	client := &Client{
-		Hub:  h,
-		Conn: conn,
-		Send: make(chan []byte, 256),
+	client := &client{
+		hub:  h,
+		conn: conn,
+		send: make(chan []byte, 256),
 	}
-	client.Hub.Register <- client
+	client.hub.register <- client
 
 	go client.writePump()
 	go client.readPump()
