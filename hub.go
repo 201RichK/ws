@@ -31,13 +31,16 @@ func (h *hub) run() {
 	for {
 		select {
 		case client := <-h.register:
+			//joining
 			h.clients[client] = true
 		case client := <-h.unregister:
+			//leaving
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
 		case message := <-h.broadcast:
+			//send msg to all client
 			for client := range h.clients {
 				select {
 				case client.send <- message:

@@ -36,11 +36,14 @@ var (
 type client struct {
 	hub *hub
 
-	//websocket connection
+	//websocket connection for this client
 	conn *websocket.Conn
 
-	//Buffered channel of outbound meesages.
+	//Buffered channel on witch msg are send
 	send chan []byte
+
+	//room is the room this client is chating
+	room *room
 }
 
 //readPump pumps message from the websocket conneection to the hub.
