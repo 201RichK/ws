@@ -1,11 +1,9 @@
 package main
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -54,23 +52,4 @@ func (c *client) readPump() {
 //writePump pumps message from the hub to the websocket connection
 func (c *client) writePump() {
 
-}
-
-//ServeWs handle websockets request
-func serveWs(h *hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		logrus.Error("serveWs upgrade err :: ", err)
-		return
-	}
-
-	client := &client{
-		hub:  h,
-		conn: conn,
-		send: make(chan []byte, 256),
-	}
-	client.hub.register <- client
-
-	go client.writePump()
-	go client.readPump()
 }

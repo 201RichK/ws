@@ -1,5 +1,11 @@
 package main
 
+import (
+	"net/http"
+
+	log "github.com/sirupsen/logrus"
+)
+
 //Hub maintains the set of active client and broadcasr msg to the client
 type hub struct {
 	//Registered clients
@@ -51,4 +57,23 @@ func (h *hub) run() {
 			}
 		}
 	}
+}
+
+//ServeHTTP handle websockets request
+func (h *hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Error("serveWs upgrade err :: ", err)
+		return
+	}
+
+	client := &client{
+		hub:  h,
+		conn: conn,
+		send: make(chan []byte, 256),
+	}
+	client.hub.register <- client
+
+	go client.writePump()
+	go client.readPump()
 }
