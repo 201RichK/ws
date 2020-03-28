@@ -38,6 +38,7 @@ func (h *hub) run() {
 		select {
 		case client := <-h.register:
 			//joining
+			log.Info(client)
 			h.clients[client] = true
 		case client := <-h.unregister:
 			//leaving
