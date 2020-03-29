@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -22,51 +21,52 @@ const (
 	maxMessageSize = 522
 )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
+type (
+	//Message struct
+	message struct {
+		//Message type
+		msgType string
 
-	upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+		//message body
+		msg []byte
+	}
+
+	//Client struct
+	Client struct {
+		//websocket connection for this client
+		conn *websocket.Conn
+
+		//messagge channel on witch msg are send
+		send chan *message
 	}
 )
 
-//Client is a middleman between the websocket connection and the hub.
-type client struct {
-	hub *hub
-
-	//websocket connection for this client
-	conn *websocket.Conn
-
-	//Buffered channel on witch msg are send
-	send chan []byte
-}
-
-//readPump pumps message from the websocket conneection to the hub.
-func (c *client) readPump() {
-	defer func() {
-		c.hub.unregister <- c
-		defer c.conn.Close()
-	}()
-
-	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-	for {
-		_, msg, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Errorf("Error :: %v", err)
-			}
-			break
-		}
-		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
-		c.hub.broadcast <- msg
+func newClient(conn *websocket.Conn) *Client {
+	return &Client{
+		conn: conn,
+		send: make(chan *message),
 	}
 }
 
-//writePump pumps message from the hub to the websocket connection
-func (c *client) writePump() {
+//ReadLoop Read meessage and pumps it to send channel
+func (c *Client) ReadLoop() {
+	defer close(c.send)
+	for {
+		_, p, err := c.conn.ReadMessage()
+		if err != nil {
+			log.Error("websocket read err ::> ", err)
+			break
+		}
+		msg := message{" ", p}
 
+		c.send <- &msg
+	}
+}
+
+//WriteMessage write a message to the client
+func (c *Client) WriteMessage(msg []byte) {
+	err := c.conn.WriteMessage(websocket.TextMessage, msg)
+	if err != nil {
+		log.Error("websocket write err ::> ", err)
+	}
 }

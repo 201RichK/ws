@@ -1,12 +1,12 @@
 package main
 
 import (
-	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
+	"text/template"
 )
 
 //single template
@@ -34,15 +34,13 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	hub := newHub()
-	go hub.run()
 
 	http.Handle("/", &templateHandler{filename: "index.html"})
 	http.Handle("/ws", hub)
-
 	var port string
 	if os.Getenv("port") == "" {
 		port = ":8080"
 	}
 
-	log.Fatal("ListenAndServe Error ::", http.ListenAndServe(port, nil))
+	log.Fatal("ListenAndServe Error ::> ", http.ListenAndServe(port, nil))
 }
