@@ -34,11 +34,10 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	hub := newHub()
-
 	http.Handle("/", &templateHandler{filename: "index.html"})
 	http.Handle("/ws", hub)
-	var port string
-	if os.Getenv("port") == "" {
+	var port string = os.Getenv("port")
+	if port == "" {
 		port = ":8080"
 	}
 

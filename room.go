@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type msgTo struct {
@@ -15,7 +14,7 @@ type room struct {
 	clients   map[int]*Client
 	count     int
 	index     int
-	join      chan *websocket.Conn
+	join      chan *Client
 	leave     chan *int
 	broadcast chan []byte
 	sendTo    chan *msgTo
@@ -28,7 +27,7 @@ func newRoom(name *string) *room {
 		clients:   make(map[int]*Client),
 		count:     0,
 		index:     0,
-		join:      make(chan *websocket.Conn),
+		join:      make(chan *Client),
 		leave:     make(chan *int),
 		broadcast: make(chan []byte),
 		sendTo:    make(chan *msgTo),
@@ -39,14 +38,14 @@ func newRoom(name *string) *room {
 func (r *room) run() {
 	for {
 		select {
-		case conn := <-r.join:
+		case client := <-r.join:
 			//add a conn to client map
 			r.index++
-			r.clients[r.index] = newClient(conn)
+			r.clients[r.index] = client
 			r.count++
 			id = r.index
 		case id := <-r.leave:
-			//Remove client from room
+			//Remove client from "room"
 			r.count--
 			delete(r.clients, *id)
 		case msgto := <-r.sendTo:
@@ -59,6 +58,7 @@ func (r *room) run() {
 			}
 		case msgEx := <-r.sendEx:
 			//Broadcast to all except
+			log.Warn(msgEx)
 			for id, client := range r.clients {
 				if id != msgEx.userID {
 					client.WriteMessage(msgEx.message)
@@ -68,19 +68,19 @@ func (r *room) run() {
 	}
 }
 
-/* Handle messages */
+//handle message
 func (r *room) HandleMsg(id int) {
 	for {
 		if r.clients[id] == nil {
+			log.Info("client not exist")
 			break
 		}
 		send := <-r.clients[id].send
-		logrus.Info("msg :: ", send.msg)
 		if send.msgType == "ex" {
+			log.Warn("::: ", send)
 			r.sendEx <- &msgTo{id, send.msg}
 		} else {
 			r.broadcast <- send.msg
-			logrus.Info("msg :: ", send.msg)
 		}
 	}
 }

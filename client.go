@@ -33,6 +33,8 @@ type (
 
 	//Client struct
 	Client struct {
+		hub *hub
+
 		//websocket connection for this client
 		conn *websocket.Conn
 
@@ -57,8 +59,7 @@ func (c *Client) ReadLoop() {
 			log.Error("websocket read err ::> ", err)
 			break
 		}
-		msg := message{" ", p}
-
+		msg := message{msgType: "ex", msg: p}
 		c.send <- &msg
 	}
 }
