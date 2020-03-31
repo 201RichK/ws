@@ -77,7 +77,6 @@ func (r *room) HandleMsg(id int) {
 		}
 		send := <-r.clients[id].send
 		if send.msgType == "ex" {
-			log.Warn("::: ", send)
 			r.sendEx <- &msgTo{id, send.msg}
 		} else {
 			r.broadcast <- send.msg

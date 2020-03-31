@@ -48,12 +48,14 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go room.run()
 	room.join <- newClient(conn)
 
-	time.Sleep(5 * time.Second) //sleep to get Id REVIEWS
+	time.Sleep(5 * time.Second) //sleep to get Id ////REVIEWS LATER
 
 	log.Info(room.clients, "id === ", id)
-
+	go room.HandleMsg(id)
+	//read from the client send channel and broadcast it
 	go room.HandleMsg(id)
 
+	//read from client and if this loop break then client disconnected
 	room.clients[id].ReadLoop()
 	room.leave <- &id
 }
