@@ -39,14 +39,14 @@ type (
 		conn *websocket.Conn
 
 		//messagge channel on witch msg are send
-		send chan *message
+		send chan message
 	}
 )
 
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
 		conn: conn,
-		send: make(chan *message),
+		send: make(chan message),
 	}
 }
 
@@ -58,9 +58,10 @@ func (c *Client) ReadLoop() {
 		if err != nil {
 			log.Error("websocket read err ::> ", err)
 			break
+
 		}
 		msg := message{msgType: "ex", msg: p}
-		c.send <- &msg
+		c.send <- msg
 	}
 }
 

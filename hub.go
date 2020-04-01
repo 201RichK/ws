@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
@@ -17,8 +16,6 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-
-	id int
 )
 
 //Create a new hub
@@ -46,16 +43,15 @@ func (h *hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 	room := h.getRoom("generale")
 	go room.run()
-	room.join <- newClient(conn)
+	id := room.join(newClient(conn))
 
-	time.Sleep(5 * time.Second) //sleep to get Id ////REVIEWS LATER
-
+	// time.Sleep(time.Second) //sleep to get Id ////REVIEWS LATER
 	log.Info(room.clients, "id === ", id)
-	go room.HandleMsg(id)
+
 	//read from the client send channel and broadcast it
 	go room.HandleMsg(id)
 
 	//read from client and if this loop break then client disconnected
 	room.clients[id].ReadLoop()
-	room.leave <- &id
+	room.leave <- id
 }
