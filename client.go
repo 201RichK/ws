@@ -33,8 +33,6 @@ type (
 
 	//Client struct
 	Client struct {
-		hub *hub
-
 		//websocket connection for this client
 		conn *websocket.Conn
 
