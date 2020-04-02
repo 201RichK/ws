@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -15,6 +16,7 @@ var (
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
 )
 
@@ -35,11 +37,13 @@ func (h *hub) getRoom(name string) *room {
 
 //ServeHTTP method allow us to get ws conn
 func (h *hub) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(websocket.IsWebSocketUpgrade(r))
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error("ServeHTTP upgrade err ::> ", err)
 		return
 	}
+	fmt.Println(conn.RemoteAddr(), conn.LocalAddr())
 	defer conn.Close()
 	room := h.getRoom("generale")
 	go room.run()

@@ -56,7 +56,6 @@ func (c *Client) ReadLoop() {
 		if err != nil {
 			log.Error("websocket read err ::> ", err)
 			break
-
 		}
 		msg := message{msgType: "ex", msg: p}
 		c.send <- msg
